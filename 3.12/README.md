@@ -44,7 +44,7 @@ The source code for postcatcher.php is included in the `php` folder in the root 
 The modified `awslambdaric` library is zipped up and hosted along with the `bootstrap.py` file. The "exploit event" is a python one liner that downloads the `bootstrap.py` and the `awslambdaric` zip file. It unzips the zipped library into tmp along with the bootstrap file and then replaces the running bootstrap with the bootstrap.py from /tmp using our modified library.
 
 The one liner code in a more readable format:
-```
+```python3
 import zipfile
 import urllib3
 import os
